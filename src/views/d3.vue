@@ -7,7 +7,7 @@
 <script>
   let margin = {top: 30, right: 20, bottom: 30, left: 20}
   let width = 960
-  let barHeight = 20
+  let barHeight = 50
   let barWidth = (width - margin.left - margin.right) * 0.8;
   let i = 0
   let duration = 400
@@ -43,6 +43,7 @@
         let json = require('../assets/flare.json')
         console.log(json)
         root = d3.hierarchy(json);
+        console.log(root)
         root.x0 = 0;
         root.y0 = 0;
         this.update(d3);
@@ -109,35 +110,36 @@
           .attr("transform", function() { return "translate(" + source.y + "," + source.x + ")"; })
           .style("opacity", 0)
           .remove();
-
         // Update the links…
         let link = svg.selectAll(".link")
           .data(root.links(), function(d) { return d.target.id; });
-
+        console.log(link)
         // Enter any new links at the parent's previous position.
         link.enter().insert("path", "g")
           .attr("class", "link")
           .attr("d", function() {
             let o = {x: 0, y: 0};
+            debugger
+            console.log(diagonal({source: o, target: o}))
             return diagonal({source: o, target: o});
           })
           .transition()
           .duration(duration)
           .attr("d", diagonal);
-
-        // Transition links to their new position.
-        link.transition()
-          .duration(duration)
-          .attr("d", diagonal);
-
-        // Transition exiting nodes to the parent's new position.
-        link.exit().transition()
-          .duration(duration)
-          .attr("d", function() {
-            let o = {x: source.x, y: source.y};
-            return diagonal({source: o, target: o});
-          })
-          .remove();
+        //
+        // // Transition links to their new position.
+        // link.transition()
+        //   .duration(duration)
+        //   .attr("d", diagonal);
+        //
+        // // Transition exiting nodes to the parent's new position.
+        // link.exit().transition()
+        //   .duration(duration)
+        //   .attr("d", function() {
+        //     let o = {x: source.x, y: source.y};
+        //     return diagonal({source: o, target: o});
+        //   })
+        //   .remove();
 
         // Stash the old positions for transition.
         root.each(function(d) {

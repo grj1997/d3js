@@ -15,6 +15,11 @@ export default new Router({
       path: '/tree',
       name: 'tree',
       component: () => import(/* webpackChunkName: "about" */ './views/d3Tree.vue')
+    },
+    {
+      path: '/d3',
+      name: 'd3',
+      component: () => import(/* webpackChunkName: "about" */ './views/d3MeTree.vue')
     }
   ]
 })

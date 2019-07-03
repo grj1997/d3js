@@ -27,7 +27,6 @@
         tree.glabels =[];
         // tree.incMatx =[];
         tree.incX=500, tree.incY=30, tree.incS=20;
-
         tree.getVertices =  function(){
           let v =[];
           function getVertices(t,f){
@@ -44,7 +43,7 @@
             _.c.forEach(function(d){
               e.push({v1:_.v, l1:_.l, p1:_.p, v2:d.v, l2:d.l, p2:d.p});
             });
-            // _.c.forEach(getEdges);
+            _.c.forEach(getEdges);
           }
           getEdges(tree.vis);
           return e.sort(function(a,b){ return a.v2 - b.v2;});
@@ -109,43 +108,40 @@
           // tree.incMatx = lbl.incMatx;
         }
         let rectNum = 0
+        let diagonal = d3.linkHorizontal().x(function(d) { return d.y; })
+          .y(function(d) { return d.x; });
         let redraw = function(){
+
+          // let edges = d3.select("#g_lines").selectAll('line').data(tree.getEdges()); // 线条
+          // edges.transition().duration(500)
+          //   .attr('x1',function(d){ return d.p1.x;}).attr('y1',function(d){ return d.p1.y;})
+          //   .attr('x2',function(d){ return d.p2.x;}).attr('y2',function(d){ return d.p2.y;})
+          // edges.enter().append('line')
+          //   .attr('x1',function(d){ return d.p1.x;}).attr('y1',function(d){ return d.p1.y;})
+          //   .attr('x2',function(d){ return d.p1.x;}).attr('y2',function(d){ return d.p1.y;})
+          //   .transition().duration(500)
+          //   .attr('x2',function(d){ return d.p2.x;}).attr('y2',function(d){ return d.p2.y;});
           let edges = d3.select("#g_lines").selectAll('path').data(tree.getEdges()); // 线条
           edges.transition().duration(500)
-      //       .attr("fill", "none")
-      //       .attr("stroke", "#555")
-      //       .attr("stroke-opacity", 0.4)
-      //       .attr("stroke-width", 1.5)
-      //       .selectAll("path")
-      //       .join("path")
-      //       .attr("d", d => `
-      //   M${d.target.y},${d.target.x}
-      //   C${d.source.y + 100},${d.target.x}
-      //    ${d.source.y + 100},${d.source.x}
-      //    ${d.source.y},${d.source.x}
-      // `);
-      //       .attr('d', function(d) { return `M${d.p1.x} ${d.p1.y} A10 10 0 0 0 ${d.p2.x} ${d.p2.y}` })
-      //       .attr('stroke-width', '1.5px')
-      //       .attr('x1',function(d){ return d.p1.x;}).attr('y1',function(d){ return d.p1.y;})
-      //       .attr('x2',function(d){ return d.p2.x;}).attr('y2',function(d){ return d.p2.y;})
+            .attr('d', function (d) {
+              return `M${d.p1.x},${d.p1.y}Q${d.p2.x + 100},${d.p2.y},${d.p1.x - 100 },${d.p1.y + 100}`
+            })
           edges.enter().append('path')
-            .attr('d', function(d) { return `M${d.p1.x} ${d.p1.y} A0 0 70 0 0 ${d.p2.x} ${d.p2.y}` })
-            .attr('x1',function(d){ return d.p1.x;}).attr('y1',function(d){ return d.p1.y;})
-            .attr('x2',function(d){ return d.p1.x}).attr('y2',function(d){ return d.p1.y;})
+            .attr('d', function (d) {
+              return `M${d.p1.x},${d.p1.y}Q${d.p2.x + 100},${d.p2.y},${d.p1.x - 100 },${d.p1.y + 100}`
+            })
             .transition().duration(500)
-            .attr('x2',function(d){ return d.p2.x;}).attr('y2',function(d){ return d.p2.y;});
-
-
-
-
+            .attr('d', function (d) {
+              return `M${d.p1.x},${d.p1.y}Q${d.p2.x + 100},${d.p2.y},${d.p1.x - 100 },${d.p1.y + 100}`
+            })
           let rects = d3.select("#g_rects").selectAll('rect').data(tree.getVertices()); // 矩形
           rects.transition().duration(500).attr('x',function(d){ return d.p.x;}).attr('y',function(d){ return d.p.y;});
           rectNum += 1
+          console.log('--------------', JSON.stringify(tree.getVertices()))
           rects.enter().append('rect').attr('x',function(d){
-            console.log(d.f.p.x)
             return d.f.p.x;
           }).attr('y',function(d){ return d.f.p.y;}).attr('r',vRad).attr('id', 'rect' + rectNum)
-            .on('click',function(d){return tree.addLeaf(d.v);})
+            .on('click',function(d){ console.log(d);return tree.addLeaf(d.v);})
             .transition().duration(500).attr('x',function(d){ return d.p.x;}).attr('y',function(d){ return d.p.y;});
 
           let labels = d3.select("#g_labels").selectAll('text').data(tree.getVertices()); // 文本域
@@ -186,25 +182,21 @@
         }
 
         let initialize = function(){
-          d3.select("body").append("div").attr('id','navdiv');
-
-          d3.select("#navdiv").append("nav").attr('id','labelnav').style('display','inline-block').style('visibility','hidden');
-
           d3.select("#labelnav").append("text").text('').attr('id','labelpos');
 
           d3.select("#labelnav").append("button").attr('type','button').text('>').attr('id','nextlabel')
             .on('click',function(){return tree.showLabel(tree.currLbl == tree.glabels.length? 1: tree.currLbl+1);});
 
-          d3.select("body").append("svg").attr("width", svgW).attr("height", svgH).attr('id','treesvg');
+          d3.select("#app").append("svg").attr("width", svgW).attr("height", svgH).attr('id','treesvg');
 
           d3.select("#treesvg").append('g').attr('id','g_lines').selectAll('line').data(tree.getEdges()).enter().append('line')
             .attr('x1',function(d){ return d.p1.x;}).attr('y1',function(d){ return d.p1.y;})
             .attr('x2',function(d){ return d.p2.x;}).attr('y2',function(d){ return d.p2.y;});
-
+          console.log(tree.getVertices())
           d3.select("#treesvg").append('g').attr('id','g_rects').selectAll('rect').data(tree.getVertices()).enter()
             .append('rect').attr('cx',function(d){
-            return d.p.x;}).attr('cy',function(d){ return d.p.y;}).attr('r',vRad)
-            .on('click',function(d){return tree.addLeaf(d.v);});
+            return d.p.x;}).attr('cy',function(d){ return d.p.y;})
+            // .on('click',function(d){return tree.addLeaf(d.v);});
 
           d3.select("#treesvg").append('g').attr('id','g_labels').selectAll('text').data(tree.getVertices()).enter().append('text')
             .attr('x',function(d){ return d.p.x + 25;}).attr('y',function(d){ return d.p.y+ 30;}).text(function(d){return d.l;})
@@ -213,7 +205,6 @@
           d3.select("#treesvg").append('g').attr('id','g_elabels').selectAll('text').data(tree.getEdges()).enter().append('text')
             .attr('x',function(d){ return (d.p1.x+d.p2.x)/2+(d.p1.x < d.p2.x? 8: -8);}).attr('y',function(d){ return (d.p1.y+d.p2.y)/2;})
             .text(function(d){return tree.glabels.length==0? '': Math.abs(d.l1 -d.l2);});
-          // d3.selection.call(d3.zoom().on("zoom", d3.select("svg")));
           tree.addLeaf(0);
           tree.addLeaf(0);
         }
@@ -244,6 +235,11 @@
         stroke:grey;
         stroke-width:3px;
     }
+    path{
+        fill: none;
+        stroke: #9ecae1;
+        stroke-width: 1.5px;
+    }
     .incRect{
         stroke:grey;
         shape-rendering:crispEdges;
@@ -255,17 +251,11 @@
     #treesvg g text:hover, #treesvg g rect:hover{
         cursor:pointer;
     }
-    #navdiv{
-        background:#555;
-    }
     #treesvg{
         border:1px solid grey;
     }
     #labelpos{
         color:white;
-    }
-    #navdiv button, #navdiv textarea{
-        vertical-align:middle;
     }
     #g_labels text{
         text-anchor:middle;
