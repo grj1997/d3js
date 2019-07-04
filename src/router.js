@@ -20,6 +20,11 @@ export default new Router({
       path: '/d3',
       name: 'd3',
       component: () => import(/* webpackChunkName: "about" */ './views/d3MeTree.vue')
+    },
+    {
+      path: '/guquan',
+      name: 'guquan',
+      component: () => import(/* webpackChunkName: "about" */ './views/guquan.vue')
     }
   ]
 })
