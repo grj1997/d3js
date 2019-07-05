@@ -4,6 +4,7 @@
 </template>
 <!--d3MeTree-->
 <script>
+  import watermark from '../watermark'
   export default {
     props: {},
 
@@ -15,6 +16,10 @@
 
     mounted() {
       this.init()
+      console.log(watermark)
+      watermark.init({
+        watermark_alpha: .1,
+        watermark_txt: "<img src='https://tpc.googlesyndication.com/simgad/2195620858670942281?sqp=4sqPyQQ7QjkqNxABHQAAtEIgASgBMAk4A0DwkwlYAWBfcAKAAQGIAQGdAQAAgD-oAQGwAYCt4gS4AV_FAS2ynT4&rs=AOga4qlZzv6sl1xcQutM8U8-4wPxCKKGHg'>" });
     },
 
     methods: {
@@ -35,14 +40,20 @@
         let i = 0
         let duration = 750
         let layoutTree = d3.layout.tree().nodeSize([145 + origin.intervalW, origin.intervalH]);
-        let diagonalUp = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), -d.y + (origin.h / 2)]); // 转换贝塞尔曲线
+        let diagonalUp = d3.svg.diagonal().projection(d => {
+          // debugger
+          // var r = d.y, a = (d.x - 90) / 180 * Math.PI;
+          console.log([d.x + (origin.w / 2), -d.y + (origin.h / 2)])
+          // return [r * Math.cos(a), r * Math.sin(a)];
+          return [d.x + (origin.w / 2), -d.y + (origin.h / 2)]
+        }); // 转换贝塞尔曲线
         let diagonalDown = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), d.y + (origin.h / 2)]); // 转换贝塞尔曲线
         let svg = d3.select("#app").append("svg").attr("width", svgW).attr("height", svgH).attr('id','treesvg').call(zm = d3.behavior.zoom().scaleExtent([1,5]).on("zoom", () => {
           svg.attr("transform",
             "translate(" + d3.event.translate + ")"
             + " scale(" + d3.event.scale + ")");
-        })).append("g").attr('id', 'g').attr("transform", "translate(" + 350 + "," + 20 + ")");
-        zm.translate([350, 20]);
+        })).append("g").attr('id', 'g').attr("transform", "translate(" + svgW / 2 + "," + svgH / 2 + ")");
+        zm.translate([svgW / 2, svgH / 2]);
         let tree = {
           name: '多彩宝',
           children: [
@@ -203,7 +214,6 @@
         let update = (source, showtype, sourceTree) => {
           let nodes = layoutTree.nodes(sourceTree).reverse()
             , links = layoutTree.links(nodes);
-          console.log(nodes)
           nodes.forEach(function (d) {
             d.y = d.depth * origin.intervalH;
           });
@@ -213,7 +223,6 @@
             .attr("class", "node" + showtype)
             .attr("transform", () => showtype === 'up' ? "translate(" + source.x0 + "," + -(source.y0) + ")" :  "translate(" + source.x0 + "," + source.y0 + ")")
             .on("click", (d) => click(d, showtype, sourceTree))
-          console.log(node.data())
           nodeEnter.append("rect")
             .attr("width", origin.w)
             .attr("height", origin.h)
@@ -223,17 +232,32 @@
               return d._children ? "lightsteelblue" : "#fff";
             });
 
-          nodeEnter.append("text")
+          let text = nodeEnter.append("text")
             .attr("x", origin.w / 2)
             .attr("y", origin.h / 2)
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .text( d => d.name);
-
+          console.log(text)
+          // 绘制箭头
+          nodeEnter.append("marker")
+            .attr("id", showtype + "resolved")
+            .attr("markerUnits", "strokeWidth")//设置为strokeWidth箭头会随着线的粗细发生变化
+            .attr("markerUnits", "userSpaceOnUse")
+            .attr("viewBox", "0 -5 10 10")//坐标系的区域
+            // .attr("refX", () => showtype === 'up' ? origin.w / 6 - 50 : -origin.w / 6 + 20)//箭头坐标
+            // .attr("refY", () => showtype === 'up' ? origin.h / 4 - 12 : -origin.h / 4 + 12)
+            .attr("markerWidth", 12)//标识的大小
+            .attr("markerHeight", 12)
+            .attr("orient", 'auto')//绘制方向，可设定为：auto（自动确认方向）和 角度值
+            .attr("stroke-width", 2)//箭头宽度
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")//箭头的路径
+            .attr('fill', '#000000');//箭头颜色
           // 将节点转换到它们的新位置。
           let nodeUpdate = node.transition()
             .duration(duration)
-            .attr("transform", d => showtype === 'up' ? "translate(" + d.x + "," + -d.y + ")" : "translate(" + d.x + "," + d.y + ")");
+            .attr("transform", d => showtype === 'up' ? "translate(" + d.x + "," + -d.y + ")" : "translate(" + d.x + "," + d.y+ ")");
 
           nodeUpdate.select("rect")
             .attr("width", origin.w)
@@ -268,7 +292,10 @@
             .attr("class", "link" + showtype)
             .attr("x", origin.w / 2)
             .attr("y", origin.y / 2)
-            .attr("d", () => {
+            .attr("marker-end", `url(#${showtype}resolved)`)//根据箭头标记的id号标记箭头
+            .attr("stroke", "white")
+            .style("fill-opacity", 1)
+            .attr("d", d => {
               let o = {
                 x: source.x0,
                 y: source.y0
@@ -280,21 +307,46 @@
                 source: o,
                 target: o
               });
+              // let x = d.target.parent.x + (origin.w / 2)
+              // let y = d.target.parent.y + (origin.h / 2)
+              // let x1 = d.target.x + (origin.w / 2)
+              // let y1 = d.target.y - (origin.h / 2)
+              // return showtype === 'up' ? `M${x},${y}C${x},${y1}, ${x1},${y} ${x1},${ -y1}` : diagonalDown({
+              //     source: o,
+              //     target: o
+              //   });
             });
 
           // 过渡更新位置.
           link.transition()
             .duration(duration)
-            .attr("d", showtype === 'up' ? diagonalUp : diagonalDown);
+            .attr("d", (d, i) => {
+              // console.log(d)
+              // let x = d.target.parent.x + (origin.w / 2)
+              // let y = d.target.parent.y + (origin.h / 2)
+              // let x1 = d.target.x + (origin.w / 2)
+              // let y1 = d.target.y - (origin.h / 2)
+              // return showtype === 'up' ? `M${x},${y}C${x1},${y}, ${x},${y1} ${x1},${ -y1}` : diagonalDown(d, i)
+              // return showtype === 'up' ? `M${x},${y}C${x},${y1}, ${x1},${y} ${x1},${ -y1}` : diagonalDown(d, i)
+              return showtype === 'up' ? diagonalUp(d, i): diagonalDown(d, i)
+            });
 
           // 将退出节点转换到父节点的新位置
           link.exit().transition()
             .duration(duration)
-            .attr("d", () => {
+            .attr("d", d => {
               let o = {
                 x: source.x,
                 y: source.y
               };
+              // let x = d.target.parent.x + (origin.w / 2)
+              // let y = d.target.parent.y + (origin.h / 2)
+              // let x1 = d.target.x + (origin.w / 2)
+              // let y1 = d.target.y - (origin.h / 2)
+              // return showtype === 'up' ? `M${x},${y}C${x},${y1}, ${x1},${y} ${x1},${ -y1}` : diagonalDown({
+              //   source: o,
+              //   target: o
+              // });
               return showtype === 'up' ? diagonalUp({
                 source: o,
                 target: o
@@ -308,15 +360,16 @@
           nodes.forEach(d => { d.x0 = d.x;d.y0 = d.y});
         }
         let click = (d, showType, sourceTree) => {
-          console.log(showType)
-          if (d.children) {
-            d._children = d.children;
-            d.children = null;
-          } else {
-            d.children = d._children;
-            d._children = null;
+          if (d.depth) { // 不是起点才能点
+            if (d.children) {
+              d._children = d.children;
+              d.children = null;
+            } else {
+              d.children = d._children;
+              d._children = null;
+            }
+            update(d, showType, sourceTree)
           }
-          update(d, showType, sourceTree)
         }
         if (upTree) {
           upTree.children.forEach(collapse);

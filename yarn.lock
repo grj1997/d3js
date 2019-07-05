@@ -8021,6 +8021,11 @@ watchpack@^1.5.0:
     graceful-fs "^4.1.2"
     neo-async "^2.5.0"
 
+watermark-dom@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/watermark-dom/-/watermark-dom-2.0.3.tgz#e97f976762cd538e1bcfae1f9f0968450e9a2e9e"
+  integrity sha512-ff0cGlafOo7aO9fOXZAzG6PGC6xcMPpgCdtZ2JD2mPLArZY+CVBmifnwAZIUfRU3YbFzTRWHRoPwvI7IajbjCg==
+
 wbuf@^1.1.0, wbuf@^1.7.3:
   version "1.7.3"
   resolved "https://registry.npm.taobao.org/wbuf/download/wbuf-1.7.3.tgz#c1d8d149316d3ea852848895cb6a0bfe887b87df"
