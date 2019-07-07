@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<svg width="960" height="500"></svg>
+</body>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+  const svg = d3.select('svg');
+  const height = svg.attr('height');
+  const width = svg.attr('width');
+  const g = svg.append('g') // 实现分组
+    .attr('transform',`translate(${ width / 2}, ${ height / 2})`)
+  //在画圆的时候，可以去掉对其圆心的操作，因为默认的位置就在中心了
+  const circle = g.append('circle') // 画圆
+    .attr('r',height / 2)
+    .attr('fill', 'yellow')
+    .attr('stroke','black')
+  // 眼睛
+  const eyeSpacing = 100; // 间距
+  const eyeY = -100 // 在y轴距离
+  const eyeRadius = 30; // 半径
+  const eyesG = g.append('g')
+    .attr('transform', `translate(0, ${eyeY})`);
+
+  const leftEye = eyesG.append('circle')
+    .attr('r', eyeRadius)
+    .attr('cx', - eyeSpacing)
+
+  const rightEye = eyesG.append('circle')
+    .attr('r', eyeRadius)
+    .attr('cx', + eyeSpacing)
+
+  //笑脸
+  let arc = d3.arc(); // 绘制圆弧
+  const mouth = g.append('path')
+    .attr('d',arc({
+      innerRadius: 150, // 内圆半径
+      outerRadius: 170, // 外圆半径
+      startAngle: Math.PI /2, // 开始弧度
+      endAngle: Math.PI * 3 / 2 // 结束弧度
+    }))
+</script>
+</html>

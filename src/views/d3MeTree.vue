@@ -16,7 +16,6 @@
 
     mounted() {
       this.init()
-      console.log(watermark)
       watermark.init({
         watermark_alpha: .1,
         watermark_txt: "<img src='https://tpc.googlesyndication.com/simgad/2195620858670942281?sqp=4sqPyQQ7QjkqNxABHQAAtEIgASgBMAk4A0DwkwlYAWBfcAKAAQGIAQGdAQAAgD-oAQGwAYCt4gS4AV_FAS2ynT4&rs=AOga4qlZzv6sl1xcQutM8U8-4wPxCKKGHg'>" });
@@ -36,14 +35,16 @@
           intervalW: 50,
           intervalH: 100
         }
+        const SYMBOLA_S_R = 6 // 加减符号半径
         let zm
         let i = 0
+        let hasChildNodeArr = []
         let duration = 750
         let layoutTree = d3.layout.tree().nodeSize([145 + origin.intervalW, origin.intervalH]);
         let diagonalUp = d3.svg.diagonal().projection(d => {
           // debugger
           // var r = d.y, a = (d.x - 90) / 180 * Math.PI;
-          console.log([d.x + (origin.w / 2), -d.y + (origin.h / 2)])
+          // console.log([d.x + (origin.w / 2), -d.y + (origin.h / 2)])
           // return [r * Math.cos(a), r * Math.sin(a)];
           return [d.x + (origin.w / 2), -d.y + (origin.h / 2)]
         }); // 转换贝塞尔曲线
@@ -196,6 +197,7 @@
             d._children = d.children;
             d._children.forEach(collapse);
             d.children = null;
+            hasChildNodeArr.push(d);
           }
         }
         let upTree = null
@@ -211,7 +213,7 @@
             downTree.parents = null
           }
         })
-        let update = (source, showtype, sourceTree) => {
+        let update = (source, showtype, sourceTree, paintingStatus) => { // paintingStatus true表示点击 绘画 反之是程序初始绘画
           let nodes = layoutTree.nodes(sourceTree).reverse()
             , links = layoutTree.links(nodes);
           nodes.forEach(function (d) {
@@ -221,8 +223,15 @@
             .data(nodes, d => d.id || (d.id = showtype + ++i));
           let nodeEnter = node.enter().append("g")
             .attr("class", "node" + showtype)
-            .attr("transform", () => showtype === 'up' ? "translate(" + source.x0 + "," + -(source.y0) + ")" :  "translate(" + source.x0 + "," + source.y0 + ")")
-            .on("click", (d) => click(d, showtype, sourceTree))
+            .attr("transform", d => {
+              console.log(d.parents === null)
+              if (d.parents === null) {
+                return showtype === 'up' ? "translate(" + source.x0 + "," + -(source.y0) + ")" : "translate(" + source.x0 + "," + source.y0 + ")"
+              } else {
+                return showtype === 'up' ? "translate(" + source.x0 + "," + -(source.y0 + origin.h / 2) + ")" : "translate(" + source.x0 + "," + source.y0 + ")"
+              }
+            })
+            // .on("click", (d) => click(d, showtype, sourceTree, true))
           nodeEnter.append("rect")
             .attr("width", origin.w)
             .attr("height", origin.h)
@@ -231,14 +240,21 @@
             .style("fill", function (d) {
               return d._children ? "lightsteelblue" : "#fff";
             });
-
+          nodeEnter.append('circle')
+            .attr('r', 1e-6)
           let text = nodeEnter.append("text")
             .attr("x", origin.w / 2)
             .attr("y", origin.h / 2)
-            .attr("dy", ".35em")
+            .attr("dy", d => (d.name.length > 9) ? '.05em' : '.35em')
             .attr("text-anchor", "middle")
-            .text( d => d.name);
-          console.log(text)
+            .text( d => (d.name.length > 9) ? d.name.substr(0, 9) : d.name);
+          nodeEnter.append("text")
+            .attr("x", origin.w / 2)
+            .attr("y", origin.h / 2)
+            .attr("dy", "1em")
+            .attr("text-anchor", "middle")
+            .text( d => d.name.substr(9, d.name.length));
+
           // 绘制箭头
           nodeEnter.append("marker")
             .attr("id", showtype + "resolved")
@@ -249,7 +265,7 @@
             // .attr("refY", () => showtype === 'up' ? origin.h / 4 - 12 : -origin.h / 4 + 12)
             .attr("markerWidth", 12)//标识的大小
             .attr("markerHeight", 12)
-            .attr("orient", 'auto')//绘制方向，可设定为：auto（自动确认方向）和 角度值
+            .attr("orient", '90')//绘制方向，可设定为：auto（自动确认方向）和 角度值
             .attr("stroke-width", 2)//箭头宽度
             .append("path")
             .attr("d", "M0,-5L10,0L0,5")//箭头的路径
@@ -257,7 +273,79 @@
           // 将节点转换到它们的新位置。
           let nodeUpdate = node.transition()
             .duration(duration)
-            .attr("transform", d => showtype === 'up' ? "translate(" + d.x + "," + -d.y + ")" : "translate(" + d.x + "," + d.y+ ")");
+            .attr("transform", d => {
+              if (d.parents === null) {
+                return showtype === 'up' ? "translate(" + d.x + "," + -(d.y) + ")" : "translate(" + d.x + "," + (d.y)+ ")"
+              } else {
+                return showtype === 'up' ? "translate(" + d.x + "," + -(d.y + origin.h / 2) + ")" : "translate(" + d.x + "," + (d.y + origin.h / 2)+ ")"
+              }
+            });
+
+          // 加减
+          nodeUpdate.select('circle')
+            .attr('r', function (d) {
+            if (d.depth) {
+            if (hasChildNodeArr.indexOf(d) === -1) {
+            return 0
+            } else {
+            return SYMBOLA_S_R
+            }
+            } else {
+            return 0
+            }
+            // return d.depth ? d.parent.name === source.name ? 0 : SYMBOLA_S_R : 0; // 是1后的数据 并且拥有子集
+            })
+            .attr('cy', function (d) {
+            return d.depth ? showtype === 'up' ? -SYMBOLA_S_R : origin.h + SYMBOLA_S_R : 0;
+            })
+            .attr('cx', function (d) {
+            return d.depth ? origin.w / 2 : 0;
+            })
+            .attr('fill', function (d) {
+            return d._children || d.children ? "#fff" : "";
+            // if (d._children || d.children) { return "#fff"; } else { return "rgba(0,0,0,0)"; }
+            })
+            .attr('stroke', function (d) {
+            return d._children || d.children ? "#8b4513" : "";
+            // if (d._children || d.children) { return "#8b4513"; } else { return "rgba(0,0,0,0)"; }
+            })
+            .attr('fill-opacity', function (d) {
+            if (d._children) { return 0.35; }
+            })
+            // Setting summary node style as class as mass style setting is
+            // not compatible to circles.
+            .attr('stroke-width', function (d) {
+            if (d.repeated) { return 5; }
+            });
+          //代表是否展开的+-号
+          nodeEnter.append("svg:text")
+            .attr("class", "isExpand")
+            .on('click', function (d) {
+              console.log(this)
+              click(d, showtype, sourceTree, true)
+              setTimeout(() => {
+                if ($(this).html() === '-') {
+                  $(this).html('+')
+                } else {
+                  $(this).html('-')
+                }
+              }, duration)
+            })
+            .attr("x", d => d.depth ? origin.w / 2 : 0)
+            .attr("dy", function (d) {
+              return d.depth ? showtype === 'up' ? -SYMBOLA_S_R / 2  : origin.h + SYMBOLA_S_R * 2 : 0;
+            })
+            .attr("text-anchor", "middle")
+            .style("fill", "#000")
+            .text(function (d) {
+              if (d.name == 'origin') {
+                return '';
+              }
+              return hasChildNodeArr.indexOf(d) != -1 ? "+" : "";
+              /* if (d._children || d.children) {
+                  return "+";
+              } */
+            });
 
           nodeUpdate.select("rect")
             .attr("width", origin.w)
@@ -272,7 +360,7 @@
           // 将退出节点转换到父节点的新位置.
           let nodeExit = node.exit().transition()
             .duration(duration)
-            .attr("transform", () => showtype === 'up' ? "translate(" + source.x + "," + -(source.y) + ")" : "translate(" + source.x + "," + source.y + ")")
+            .attr("transform", () => showtype === 'up' ? "translate(" + source.x + "," + -(source.y + origin.h / 2) + ")" : "translate(" + source.x + "," + (parseInt(source.y) + origin.h / 2) + ")")
             .remove();
 
           nodeExit.select("rect")
@@ -291,7 +379,7 @@
           link.enter().insert("path", "g")
             .attr("class", "link" + showtype)
             .attr("x", origin.w / 2)
-            .attr("y", origin.y / 2)
+            .attr("y", origin.y - origin.h)
             .attr("marker-end", `url(#${showtype}resolved)`)//根据箭头标记的id号标记箭头
             .attr("stroke", "white")
             .style("fill-opacity", 1)
@@ -359,7 +447,7 @@
           // 隐藏旧位置方面过渡.
           nodes.forEach(d => { d.x0 = d.x;d.y0 = d.y});
         }
-        let click = (d, showType, sourceTree) => {
+        let click = (d, showType, sourceTree, paintingStatus) => {
           if (d.depth) { // 不是起点才能点
             if (d.children) {
               d._children = d.children;
@@ -368,7 +456,7 @@
               d.children = d._children;
               d._children = null;
             }
-            update(d, showType, sourceTree)
+            update(d, showType, sourceTree, paintingStatus)
           }
         }
         if (upTree) {
@@ -379,182 +467,6 @@
           downTree.children.forEach(collapse);
           update(downTree, 'down', downTree) // 下
         }
-
-
-        // d3.select("#g").append('g').attr('id','g_rects').selectAll('rect').data([tree]).enter().append('rect')
-        //   .attr('name', tree.name)
-        //   .attr('x', () => centralPoint.pX - (origin.w / 2))
-        //   .attr('y', () => centralPoint.pY - (50 / 2))
-        // d3.select("#g").append('g').attr('id','g_text').selectAll('text').data([tree]).enter().append('text')
-        // let rank = 0
-        // this.addRect({d3, rank: rank, arr: tree.parents, name: tree.name, origin, objType: 'parent'})
-        // this.addRect({d3, rank: rank, arr: tree.children, name: tree.name, origin, objType: 'child'})
-      },
-      addRect(obj) {
-        let { d3, rank, arr, name, origin, objType} = obj
-        rank += 1
-        let add = (data,type, index) => { // type left 表示往左边画 用- right 往右 用 +, objType parent 表示父级 向上走, child表示下级 往下走
-          let _this = this
-          let rect = d3.select("#g_rects").append('rect').data([data]);
-          $(rect).data(data) // 往新增的rect插入data
-          let text = d3.select("#g_text").append('text').append('tspan').data([data]);
-          let rectPNode = $(`rect[name="${data.pNodeName}"]`)
-          rect.attr('pName', data.pNodeName)
-            .attr('rank', () => {
-              if (objType === 'parent') {
-                return 'p' + rank
-              } else {
-                return 'c' + rank
-              }
-            })
-            .attr('name', thisRectSource => thisRectSource.name)
-            .attr('x',() => {
-              let value
-              if (type === 'left') {
-                value = Math.round(rectPNode.attr('x')) - origin.w * (index + 1) - origin.intervalW * (index + 1)
-              } else if(type === 'right') {
-                value = Math.round(rectPNode.attr('x')) + origin.w * (index + 1) + origin.intervalW * (index + 1)
-              } else {
-                value = parseInt(rectPNode.attr('x'))
-              }
-              return value
-            })
-            .attr('y',() => {
-              let value
-              if (objType === 'parent') {
-                value = parseInt(rectPNode.attr('y')) - origin.intervalH - origin.h
-              } else {
-                value = parseInt(rectPNode.attr('y')) + origin.intervalH + origin.h
-              }
-              // if (type === 'left') {
-              //   if (objType === 'parent') {
-              //     value = parseInt(rectPNode.attr('y')) - origin.intervalH - origin.h
-              //   }else {
-              //     value = ''
-              //   }
-              // } else if(type === 'right') {
-              //   if (objType === 'parent') {
-              //     value = parseInt(rectPNode.attr('y')) - origin.intervalH - origin.h
-              //   }else {
-              //     value = ''
-              //   }
-              // } else {
-              //   if (objType === 'parent') {
-              //     value = parseInt(rectPNode.attr('y')) - origin.intervalH - origin.h
-              //   }else {
-              //     value = ''
-              //   }
-              // }
-              return value
-            })
-          text.attr('pName', data.pNodeName)
-            .attr('dy', '1em')
-            .attr('name', thisRectSource => thisRectSource.name)
-            .attr('x',() => {
-              let value
-              if (type === 'left') {
-                value = Math.round(rectPNode.attr('x')) - origin.w * (index + 1) - origin.intervalW * (index + 1)
-              } else if(type === 'right') {
-                value = Math.round(rectPNode.attr('x')) + origin.w * (index + 1) + origin.intervalW * (index + 1)
-              } else {
-                value = parseInt(rectPNode.attr('x'))
-              }
-              return value
-            })
-            .attr('y',() => {
-              let value
-              if (objType === 'parent') {
-                value = parseInt(rectPNode.attr('y')) - origin.intervalH - origin.h
-              } else {
-                value = parseInt(rectPNode.attr('y')) + origin.intervalH + origin.h
-              }
-              return value
-            })
-            .text(thisRectSource => thisRectSource.name)
-          rect.on('click', function () {
-            let thisData = $(this).data()
-            if (!thisData.isOpen) {
-              let _obj = {
-                d3,
-                rank,
-                initialize: false,
-                name: thisData.name,
-                origin
-              }
-              if (objType === 'parent' && thisData.parents && thisData.parents.length) {
-                thisData.isOpen = true
-                console.log('打开')
-                _this.addRect(Object.assign({arr: thisData.parents, objType: 'parent'}, _obj))
-              } else if (objType === 'child' && thisData.children && thisData.children.length) {
-                thisData.isOpen = true
-                console.log('打开')
-                _this.addRect(Object.assign({arr: thisData.children, objType: 'child'}, _obj))
-              }
-            } else {
-              if ($(`rect[pName=${thisData.name}]`).length) {
-                thisData.isOpen = false
-                console.log('关闭')
-              }
-            }
-          });
-        }
-        let addLeft = leftArr => {
-          leftArr.map((item, index) => {
-            add(Object.assign({pNodeName: name}, item), 'left', index)
-          })
-        }
-        let addRight = rightArr => {
-          rightArr.map((item, index) => {
-            add(Object.assign({pNodeName: name}, item), 'right', index)
-          })
-        }
-        let middle = item => {
-          add(Object.assign({pNodeName: name}, item), 'middle')
-        }
-        // if (initialize) {
-        if (arr.length % 2 === 1) { // 基数个
-            let miaddleNum = Math.floor(arr.length / 2) // 数组中间的元素索引
-            let leftArr = () => {
-              let _arr = []
-              for (let i = 0; i < miaddleNum; i++) {
-                _arr.push(arr[i])
-              }
-              return _arr
-            }
-            addLeft(leftArr())
-            let rightArr = () => {
-              let _arr = []
-              for (let i = miaddleNum + 1; i < arr.length; i++) {
-                _arr.push(arr[i])
-              }
-              return _arr
-            }
-            middle(arr[miaddleNum])
-            addRight(rightArr())
-            // this.reposition(name)
-          } else { // 偶数个
-          let leftArr = () => {
-              let _arr = []
-              for (let i = 0; i < (arr.length / 2); i++) {
-                _arr.push(arr[i])
-              }
-              return _arr
-            }
-          addLeft(leftArr())
-          let rightArr = () => {
-              let _arr = []
-              for (let i = (arr.length /2); i < arr.length; i++) {
-                _arr.push(arr[i])
-              }
-              return _arr
-            }
-          addRight(rightArr())
-        }
-        // }
-      },
-      removeRect(name) {
-        console.log(name)
-       console.log( $(`rect[name=${name}]`))
       }
     },
 

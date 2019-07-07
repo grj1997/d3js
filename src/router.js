@@ -25,6 +25,11 @@ export default new Router({
       path: '/guquan',
       name: 'guquan',
       component: () => import(/* webpackChunkName: "about" */ './views/guquan.vue')
+    },
+    {
+      path: '/tianyancha',
+      name: 'tianyancha',
+      component: () => import(/* webpackChunkName: "about" */ './views/tianyancha.vue')
     }
   ]
 })
