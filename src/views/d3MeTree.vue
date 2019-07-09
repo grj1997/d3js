@@ -40,73 +40,54 @@
         let i = 0
         let hasChildNodeArr = []
         let duration = 750
-        let layoutTree = d3.layout.tree().nodeSize([145 + origin.intervalW, origin.intervalH]);
-        let diagonalUp = d3.svg.diagonal().projection(d => {
-          // debugger
-          // var r = d.y, a = (d.x - 90) / 180 * Math.PI;
-          // console.log([d.x + (origin.w / 2), -d.y + (origin.h / 2)])
-          // return [r * Math.cos(a), r * Math.sin(a)];
-          return [d.x + (origin.w / 2), -d.y + (origin.h / 2)]
-        }); // 转换贝塞尔曲线
-        let diagonalDown = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), d.y + (origin.h / 2)]); // 转换贝塞尔曲线
-        let svg = d3.select("#app").append("svg").attr("width", svgW).attr("height", svgH).attr('id','treesvg').call(zm = d3.behavior.zoom().scaleExtent([1,5]).on("zoom", () => {
-          svg.attr("transform",
-            "translate(" + d3.event.translate + ")"
-            + " scale(" + d3.event.scale + ")");
-        })).append("g").attr('id', 'g').attr("transform", "translate(" + svgW / 2 + "," + svgH / 2 + ")");
-        zm.translate([svgW / 2, svgH / 2]);
         let tree = {
           name: '多彩宝',
           children: [
             {
-              rank: 'p2',
               name: '一卡通公司'
             },
             {
-              rank: 'p2',
               name: '一卡通公司2',
               children: [
                 {
-                  rank: 'p3',
                   name: '小公司'
                 },
                 {
-                  rank: 'p3',
                   name: '小公司2'
                 }
               ]
             },
             {
-              rank: 'p2',
               name: '一卡通公司2333',
               children: [
                 {
-                  rank: 'p3',
                   name: '小公司'
                 },
                 {
-                  rank: 'p3',
                   name: '小公司2'
                 }
               ]
             },
             {
-              rank: 'p2',
               name: '一卡通公司2222'
             }
           ],
           parents: [
             {
               name: '多彩贵州文化公司',
-              isOpen: false,
-              rank: 'p1',
               children: [
                 {
-                  rank: 'p2',
                   name: '发改委',
                   children: [
                     {
-                      rank: 'p3',
+                      name: '123'
+                    }
+                  ]
+                },
+                {
+                  name: '123发改委',
+                  children: [
+                    {
                       name: '123'
                     }
                   ]
@@ -115,41 +96,30 @@
             },
             {
               name: '多彩贵州网有限责任公司',
-              rank: 'p1',
-              isOpen: false,
               children: [
                 {
-                  rank: 'p2',
                   name: '发改委'
                 }
               ]
             },
             {
               name: '多彩贵州网有限责任公司2222',
-              rank: 'p1',
-              isOpen: false,
               children: [
                 {
-                  rank: 'p2',
                   name: '发改委'
                 }
               ]
             },
             {
               name: '多彩贵州网有限责任公司333',
-              rank: 'p1',
-              isOpen: false,
               children: [
                 {
-                  rank: 'p2',
                   name: '发改委333'
                 }
               ]
             },
             {
               name: '多彩贵州网有限责任公司444',
-              rank: 'p1',
-              isOpen: false,
               children: [
                 {
                   rank: 'p2',
@@ -159,8 +129,6 @@
             },
             {
               name: '多彩贵州网有限责任公司555',
-              isOpen: false,
-              rank: 'p1',
               children: [
                 {
                   name: '发改委555'
@@ -169,19 +137,14 @@
             },
             {
               name: '龙像创业投资',
-              rank: 'p1',
-              isOpen: false,
               children: [
                 {
-                  rank: 'p2',
                   name: '王林文'
                 },
                 {
-                  rank: 'p2',
                   name: '张一峰'
                 },
                 {
-                  rank: 'p2',
                   name: '侯其明'
                 }
               ]
@@ -192,6 +155,15 @@
         tree.y0 = 0
         tree.x = 0
         tree.y = 0
+        let layoutTree = d3.tree(tree).nodeSize([145 + origin.intervalW, origin.intervalH]);
+        let diagonalUp = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), -d.y + (origin.h / 2)]); // 转换贝塞尔曲线
+        let diagonalDown = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), d.y + (origin.h / 2)]); // 转换贝塞尔曲线
+        let svg = d3.select("#app").append("svg").attr("width", svgW).attr("height", svgH).attr('id','treesvg').call(zm = d3.behavior.zoom().scaleExtent([1,5]).on("zoom", () => {
+          svg.attr("transform",
+            "translate(" + d3.event.translate + ")"
+            + " scale(" + d3.event.scale + ")");
+        })).append("g").attr('id', 'g').attr("transform", "translate(" + svgW / 2 + "," + svgH / 2 + ")");
+        zm.translate([svgW / 2, svgH / 2]);
         let collapse = (d) => {
           if (d.children) {
             d._children = d.children;
@@ -242,6 +214,33 @@
             });
           nodeEnter.append('circle')
             .attr('r', 1e-6)
+          nodeEnter.append("text")
+            .attr("class", d => {
+              if (!d.depth) {
+                return 'proportion-hide'
+              } else {
+                return 'proportion'
+              }
+            })
+            .attr("x", () => origin.w / 2 + origin.intervalW)
+            .attr("y", () => showtype === 'up' ? (origin.w / 2) : - origin.w / 2)
+            .attr("dy", () => showtype === 'up' ? 0 : origin.w / 2 - 10)
+            .attr("text-anchor", function () {
+              return 'middle';
+            })
+            .text(function (d) {
+              return 123;
+            })
+            .style({
+              'fill': "#337ab7",
+              'font-size': 14,
+              'cursor': "pointer"
+            })
+            .on('click', function () {
+              alert(1);
+              // window.open('http://www.baidu.com')
+            });
+
           let text = nodeEnter.append("text")
             .attr("x", origin.w / 2)
             .attr("y", origin.h / 2)
@@ -277,7 +276,7 @@
               if (d.parents === null) {
                 return showtype === 'up' ? "translate(" + d.x + "," + -(d.y) + ")" : "translate(" + d.x + "," + (d.y)+ ")"
               } else {
-                return showtype === 'up' ? "translate(" + d.x + "," + -(d.y + origin.h / 2) + ")" : "translate(" + d.x + "," + (d.y + origin.h / 2)+ ")"
+                return showtype === 'up' ? "translate(" + d.x + "," + -(d.y + origin.h / 2) + ")" : "translate(" + d.x + "," + (d.y + origin.h / 2 + 10)+ ")"
               }
             });
 
@@ -360,7 +359,7 @@
           // 将退出节点转换到父节点的新位置.
           let nodeExit = node.exit().transition()
             .duration(duration)
-            .attr("transform", () => showtype === 'up' ? "translate(" + source.x + "," + -(source.y + origin.h / 2) + ")" : "translate(" + source.x + "," + (parseInt(source.y) + origin.h / 2) + ")")
+            .attr("transform", () => showtype === 'up' ? "translate(" + source.x + "," + -(source.y + origin.h / 2) + ")" : "translate(" + source.x + "," + (parseInt(source.y) + origin.h / 2 + 10) + ")")
             .remove();
 
           nodeExit.select("rect")
@@ -395,27 +394,12 @@
                 source: o,
                 target: o
               });
-              // let x = d.target.parent.x + (origin.w / 2)
-              // let y = d.target.parent.y + (origin.h / 2)
-              // let x1 = d.target.x + (origin.w / 2)
-              // let y1 = d.target.y - (origin.h / 2)
-              // return showtype === 'up' ? `M${x},${y}C${x},${y1}, ${x1},${y} ${x1},${ -y1}` : diagonalDown({
-              //     source: o,
-              //     target: o
-              //   });
             });
 
           // 过渡更新位置.
           link.transition()
             .duration(duration)
             .attr("d", (d, i) => {
-              // console.log(d)
-              // let x = d.target.parent.x + (origin.w / 2)
-              // let y = d.target.parent.y + (origin.h / 2)
-              // let x1 = d.target.x + (origin.w / 2)
-              // let y1 = d.target.y - (origin.h / 2)
-              // return showtype === 'up' ? `M${x},${y}C${x1},${y}, ${x},${y1} ${x1},${ -y1}` : diagonalDown(d, i)
-              // return showtype === 'up' ? `M${x},${y}C${x},${y1}, ${x1},${y} ${x1},${ -y1}` : diagonalDown(d, i)
               return showtype === 'up' ? diagonalUp(d, i): diagonalDown(d, i)
             });
 
@@ -427,14 +411,6 @@
                 x: source.x,
                 y: source.y
               };
-              // let x = d.target.parent.x + (origin.w / 2)
-              // let y = d.target.parent.y + (origin.h / 2)
-              // let x1 = d.target.x + (origin.w / 2)
-              // let y1 = d.target.y - (origin.h / 2)
-              // return showtype === 'up' ? `M${x},${y}C${x},${y1}, ${x1},${y} ${x1},${ -y1}` : diagonalDown({
-              //   source: o,
-              //   target: o
-              // });
               return showtype === 'up' ? diagonalUp({
                 source: o,
                 target: o
@@ -444,6 +420,7 @@
               });
             })
             .remove();
+
           // 隐藏旧位置方面过渡.
           nodes.forEach(d => { d.x0 = d.x;d.y0 = d.y});
         }
@@ -468,7 +445,7 @@
           update(downTree, 'down', downTree) // 下
         }
       }
-    },
+    }
 
   }
 </script>
@@ -500,5 +477,8 @@
     #treesvg{
         display: block;
         margin: auto;
+    }
+    .proportion-hide{
+        display: none;
     }
 </style>

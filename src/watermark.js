@@ -1,7 +1,7 @@
 let init = () => {
   /*Just return a value to define the module export.*/
   let watermark = {}
-  var defaultSettings={
+  let defaultSettings={
     watermark_id: 'wm_div_id',          //水印总体的id
     watermark_prefix: 'mask_div_id',    //小水印的id前缀
     watermark_txt:"测试水印",             //水印的内容
@@ -24,11 +24,11 @@ let init = () => {
   };
 
   /*加载水印*/
-  var loadMark = function(settings) {
+  let loadMark = function(settings) {
 
     /*采用配置项替换默认值，作用类似jquery.extend*/
     if(arguments.length===1&&typeof arguments[0] ==="object" ){
-      var src=arguments[0]||{};
+      let src=arguments[0]||{};
       for(let key in src)
       {
         if(src[key]&&defaultSettings[key]&&src[key]===defaultSettings[key])continue;
@@ -38,24 +38,24 @@ let init = () => {
     }
 
     /*如果元素存在则移除*/
-    var watermark_element = document.getElementById(defaultSettings.watermark_id);
+    let watermark_element = document.getElementById(defaultSettings.watermark_id);
     if (watermark_element) {
-      var _parentElement = watermark_element.parentNode;
+      let _parentElement = watermark_element.parentNode;
       if(_parentElement){
         _parentElement.removeChild(watermark_element);
       }
     }
 
     /*获取页面最大宽度*/
-    var page_width = Math.max(document.body.scrollWidth,document.body.clientWidth) - defaultSettings.watermark_width/2;
+    let page_width = Math.max(document.body.scrollWidth,document.body.clientWidth) - defaultSettings.watermark_width/2;
     /*获取页面最大长度*/
-    var page_height = Math.max(document.body.scrollHeight,document.body.clientHeight,document.documentElement.clientHeight)-defaultSettings.watermark_height/2;
+    let page_height = Math.max(document.body.scrollHeight,document.body.clientHeight,document.documentElement.clientHeight)-defaultSettings.watermark_height/2;
 
-    var setting = arguments[0]||{};
-    var parentEle = defaultSettings.watermark_parent_node;
+    let setting = arguments[0]||{};
+    let parentEle = defaultSettings.watermark_parent_node;
 
-    var page_offsetTop = 0;
-    var page_offsetLeft = 0;
+    let page_offsetTop = 0;
+    let page_offsetLeft = 0;
 
     if(setting.watermark_parent_width || setting.watermark_parent_height){
       setting.watermark_parent_width?(page_width = setting.watermark_parent_width-defaultSettings.watermark_width/2):(defaultSettings.watermark_parent_node)?(page_width = parentEle.offsetWidth-defaultSettings.watermark_width/2):void 0;
@@ -81,8 +81,8 @@ let init = () => {
     }
 
     /*创建水印外壳div*/
-    var otdiv = document.getElementById(defaultSettings.watermark_id);
-    var shadowRoot=null;
+    let otdiv = document.getElementById(defaultSettings.watermark_id);
+    let shadowRoot=null;
 
     if(!otdiv){
       otdiv =document.createElement('div');
@@ -100,8 +100,8 @@ let init = () => {
       }
 
       /*将shadow dom随机插入body内的任意位置*/
-      var nodeList = document.body.children;
-      var index = Math.floor(Math.random()*(nodeList.length-1 ));
+      let nodeList = document.body.children;
+      let index = Math.floor(Math.random()*(nodeList.length-1 ));
       if(nodeList[index]){
         document.body.insertBefore(otdiv, nodeList[index]);
       }else{
@@ -124,16 +124,16 @@ let init = () => {
       defaultSettings.watermark_y_space = parseInt(((page_height - defaultSettings.watermark_y + page_offsetTop) - defaultSettings.watermark_height * defaultSettings.watermark_rows) / (defaultSettings.watermark_rows - 1));
     }
 
-    var x;
-    var y;
-    for (var i = 0; i < defaultSettings.watermark_rows; i++) {
+    let x;
+    let y;
+    for (let i = 0; i < defaultSettings.watermark_rows; i++) {
       y = defaultSettings.watermark_y + (defaultSettings.watermark_y_space + defaultSettings.watermark_height) * i;
-      for (var j = 0; j < defaultSettings.watermark_cols; j++) {
+      for (let j = 0; j < defaultSettings.watermark_cols; j++) {
         x = defaultSettings.watermark_x + (defaultSettings.watermark_width + defaultSettings.watermark_x_space) * j;
 
-        var mask_div = document.createElement('div');
-        // var oText=document.createTextNode(defaultSettings.watermark_txt);
-        // var oText=document.createElement(defaultSettings.watermark_txt);
+        let mask_div = document.createElement('div');
+        // let oText=document.createTextNode(defaultSettings.watermark_txt);
+        // let oText=document.createElement(defaultSettings.watermark_txt);
         // console.log(oText)
         mask_div.appendChild(new DOMParser().parseFromString(defaultSettings.watermark_txt,'text/html').body.childNodes[0]);
         /*设置水印相关属性start*/
@@ -169,12 +169,12 @@ let init = () => {
   };
 
   /*移除水印*/
-  var removeMark = function() {
+  let removeMark = function() {
 
     /*采用配置项替换默认值，作用类似jquery.extend*/
     if(arguments.length===1&&typeof arguments[0] ==="object" )
     {
-      var src=arguments[0]||{};
+      let src=arguments[0]||{};
       for(let key in src)
       {
         if(src[key]&&defaultSettings[key]&&src[key]===defaultSettings[key])continue;
@@ -184,8 +184,8 @@ let init = () => {
     }
 
     /*移除水印*/
-    var watermark_element = document.getElementById(defaultSettings.watermark_id);
-    var _parentElement = watermark_element.parentNode;
+    let watermark_element = document.getElementById(defaultSettings.watermark_id);
+    let _parentElement = watermark_element.parentNode;
     _parentElement.removeChild(watermark_element);
 
   };
@@ -218,5 +218,4 @@ let init = () => {
 
 }
 let watermark = init()
-console.log(watermark.in)
 export default watermark
