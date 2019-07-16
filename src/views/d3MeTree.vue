@@ -103,39 +103,6 @@
               ]
             },
             {
-              name: '多彩贵州网有限责任公司2222',
-              children: [
-                {
-                  name: '发改委'
-                }
-              ]
-            },
-            {
-              name: '多彩贵州网有限责任公司333',
-              children: [
-                {
-                  name: '发改委333'
-                }
-              ]
-            },
-            {
-              name: '多彩贵州网有限责任公司444',
-              children: [
-                {
-                  rank: 'p2',
-                  name: '发改委444'
-                }
-              ]
-            },
-            {
-              name: '多彩贵州网有限责任公司555',
-              children: [
-                {
-                  name: '发改委555'
-                }
-              ]
-            },
-            {
               name: '龙像创业投资',
               children: [
                 {
@@ -155,7 +122,8 @@
         tree.y0 = 0
         tree.x = 0
         tree.y = 0
-        let layoutTree = d3.tree(tree).nodeSize([145 + origin.intervalW, origin.intervalH]);
+        let layoutTree = d3.layout.tree(tree).nodeSize([145 + origin.intervalW, origin.intervalH]);
+        console.log(layoutTree)
         let diagonalUp = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), -d.y + (origin.h / 2)]); // 转换贝塞尔曲线
         let diagonalDown = d3.svg.diagonal().projection(d => [d.x + (origin.w / 2), d.y + (origin.h / 2)]); // 转换贝塞尔曲线
         let svg = d3.select("#app").append("svg").attr("width", svgW).attr("height", svgH).attr('id','treesvg').call(zm = d3.behavior.zoom().scaleExtent([1,5]).on("zoom", () => {
@@ -188,6 +156,7 @@
         let update = (source, showtype, sourceTree, paintingStatus) => { // paintingStatus true表示点击 绘画 反之是程序初始绘画
           let nodes = layoutTree.nodes(sourceTree).reverse()
             , links = layoutTree.links(nodes);
+          console.log(nodes)
           nodes.forEach(function (d) {
             d.y = d.depth * origin.intervalH;
           });

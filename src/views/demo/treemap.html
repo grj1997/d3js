@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<style>
+
+    form {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    svg {
+        font: 10px sans-serif;
+    }
+
+</style>
+<svg width="960" height="570"></svg>
+<form>
+    <label><input type="radio" name="mode" value="sumBySize" checked> Size</label>
+    <label><input type="radio" name="mode" value="sumByCount"> Count</label>
+</form>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+  // 定義svg畫布
+  var svg = d3.select("svg"),
+    // 獲取svg畫布寬度
+    width = +svg.attr("width"),
+    // 獲取svg畫布高度
+    height = +svg.attr("height");
+
+  // 定義fader函數用來獲取顏色,返回顏色字符串
+  // d3.interpolateCubehelix(a, b)返回a和b之間的顏色插值，0.2是修正gamma值
+  var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
+    // d3.schemeCategory20.map(fader),將d3.schemeCategory20返回的20個顏色值通過fader函數
+    // 進行映射轉換，最終，生成離散顏色比例尺color函數
+    color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
+    // 定義一個格式函數
+    format = d3.format(",d");
+
+  // 定義一個矩形樹圖佈局函數treemap()函數
+  var treemap = d3.treemap()
+  // 設置tile爲d3.treemapResquarify，即矩形按層排列
+    .tile(d3.treemapResquarify)
+    // 指定佈局範圍
+    .size([width, height])
+    // 啓用邊界補償
+    .round(true)
+    // 指定內部間距
+    .paddingInner(1);
+
+  // 讀取數據
+  d3.json("https://raw.githubusercontent.com/d3/d3-hierarchy/v1.1.8/test/data/flare.json", function(error, data) {
+    if (error) throw error;
+
+    // 生成樹形層次結構的數據
+    var root = d3.hierarchy(data)
+    // node.eachBefore用來前序遍歷樹節點，對於每一個node,計算id的格式
+      .eachBefore(function(d) { d.data.id = (d.parent ? d.parent.data.id + "." : "") + d.data.name; })
+      // 對節點的size屬性求和
+      .sum(sumBySize)
+      // 對節點進行排序，按照深度或者值的大小來確定順序
+      .sort(function(a, b) { return b.height - a.height || b.value - a.value; });
+
+    // 對root數據進行矩形樹佈局
+    treemap(root);
+
+    // 定義每個矩形的畫布
+    var cell = svg.selectAll("g")
+    // 將葉子節點數據綁定到矩形元素上
+      .data(root.leaves())
+      .enter().append("g")
+      // 設置矩形的位置
+      .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+
+    // 設置代表樹節點的每個矩形的id,寬度，高度以及填充色
+    cell.append("rect")
+      .attr("id", function(d) { return d.data.id; })
+      .attr("width", function(d) { return d.x1 - d.x0; })
+      .attr("height", function(d) { return d.y1 - d.y0; })
+      // 填充色通過父節點的id來計算，保證同一父節點的所有子節點的顏色相同
+      .attr("fill", function(d) { return color(d.parent.data.id); });
+
+    // 定義矩形上的文字裁剪元素
+    cell.append("clipPath")
+      .attr("id", function(d) { return "clip-" + d.data.id; })
+      .append("use")
+      .attr("xlink:href", function(d) { return "#" + d.data.id; });
+
+    // 爲矩形上的文字使用clip-path，控制文字換行
+    cell.append("text")
+      .attr("clip-path", function(d) { return "url(#clip-" + d.data.id + ")"; })
+      .selectAll("tspan")
+      .data(function(d) { return d.data.name.split(/(?=[A-Z][^A-Z])/g); })
+      .enter().append("tspan")
+      .attr("x", 4)
+      .attr("y", function(d, i) { return 13 + i * 10; })
+      .text(function(d) { return d; });
+
+    // 爲矩形綁定title屬性，並設置title顯示內容
+    cell.append("title")
+      .text(function(d) { return d.data.id + "\n" + format(d.value); });
+
+    // 定義兩個控制按鈕：按照節點的size或者節點子節點的個數進行佈局排列
+    d3.selectAll("input")
+      .data([sumBySize, sumByCount], function(d) { return d ? d.name : this.value; })
+      .on("change", changed);
+
+    // 定義定時器，默認以count爲排列依據
+    var timeout = d3.timeout(function() {
+      d3.select("input[value=\"sumByCount\"]")
+        .property("checked", true)
+        .dispatch("change");
+    }, 2000);
+
+    // 當切換按鈕被點擊時，切換排列依據
+    function changed(sum) {
+      timeout.stop();
+      // 以當前的sum方式來排列布局
+      treemap(root.sum(sum));
+
+      // 切換佈局的過程動畫
+      cell.transition()
+        .duration(750)
+        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; })
+        .select("rect")
+        .attr("width", function(d) { return d.x1 - d.x0; })
+        .attr("height", function(d) { return d.y1 - d.y0; });
+    }
+  });
+
+  // 對節點的子節點個數求和
+  function sumByCount(d) {
+    return d.children ? 0 : 1;
+  }
+  // 返回節點的size屬性
+  function sumBySize(d) {
+    // console.log(d.size)
+    return '';
+  }
+
+</script>

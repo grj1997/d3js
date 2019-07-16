@@ -24,7 +24,8 @@
       return {}
     },
     created() {
-      d3 = this.$d3
+      debugger
+      d3 = window.$d3V4
       diagonal = d3.linkHorizontal()
         .x(function(d) { return d.y; })
         .y(function(d) { return d.x; });

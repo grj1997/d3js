@@ -30,6 +30,11 @@ export default new Router({
       path: '/tianyancha',
       name: 'tianyancha',
       component: () => import(/* webpackChunkName: "about" */ './views/tianyancha.vue')
+    },
+    {
+      path: '/gongsi',
+      name: 'gongsi',
+      component: () => import(/* webpackChunkName: "about" */ './views/gongsi/penetrateChart.vue')
     }
   ]
 })
