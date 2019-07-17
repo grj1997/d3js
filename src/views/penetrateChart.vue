@@ -31,7 +31,7 @@
         originDiamonds: '',
         diagonalUp: '',
         diagonalDown: '',
-        tree: {"name":"多彩宝","children":[{"name":"一卡通公司","type":0},{"name":"一卡通公司2","type":0,"children":[{"name":"小公司","type":0,"children":[{"name":"小小小","type":0,"children":[{"type":1,"name":"笑小下"}]}]},{"type":0,"name":"小公司2"}]},{"name":"一卡通公司2333","type":0,"children":[{"type":0,"name":"小公司"},{"type":0,"name":"小公司2"}]},{"type":0,"name":"一卡通公司2222"}],"parents":[{"name":"多彩贵州文化公司","type":0,"children":[{"name":"发改委","type":0,"money":"780万元","children":[{"type":0,"money":"780万元","name":"123"}]},{"name":"123发改委","money":"780万元","type":0,"children":[{"money":"780万元","type":0,"name":"123"}]}]},{"name":"多彩贵州网有限责任公司","money":"780万元","type":0,"children":[{"type":0,"money":"780万元","name":"发改委"}]},{"name":"龙像创业投资","money":"780万元","type":0,"children":[{"type":1,"money":"780万元","name":"王林文"},{"type":1,"money":"780万元","name":"张一峰"},{"type":1,"money":"780万元","name":"侯其明"}]}]},
+        tree: {"name":"多多包","children":[{"name":"一卡通公司","type":0},{"name":"一卡通公司2","type":0,"children":[{"name":"小公司","type":0,"children":[{"name":"小小小","type":0,"children":[{"type":1,"name":"笑小下"}]}]},{"type":0,"name":"小公司2"}]},{"name":"一卡通公司2333","type":0,"children":[{"type":0,"name":"小公司"},{"type":0,"name":"小公司2"}]},{"type":0,"name":"一卡通公司2222"}],"parents":[{"name":"大公司","type":0,"children":[{"name":"发发委","type":0,"money":"780万元","children":[{"type":0,"money":"780万元","name":"123"}]},{"name":"123发发委","money":"780万元","type":0,"children":[{"money":"780万元","type":0,"name":"123"}]}]},{"name":"多多网","money":"780万元","type":0,"children":[{"type":0,"money":"780万元","name":"发哈哈"}]},{"name":"龙龙投资","money":"780万元","type":0,"children":[{"type":1,"money":"780万元","name":"王林"},{"type":1,"money":"780万元","name":"张峰"},{"type":1,"money":"780万元","name":"侯明"}]}]},
         rootUp: '',
         rootDown: '',
         svg: ''
@@ -46,7 +46,7 @@
       init () {
         let d3 = this.d3
         let svgW = document.body.clientWidth
-        let svgH = 300
+        let svgH = 500
         // 方块形状
         this.diamonds = {
           w: 145,
