@@ -8,33 +8,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: () => import(/* webpackChunkName: "about" */ './views/d3.vue')
-    },
-    {
-      path: '/tree',
-      name: 'tree',
-      component: () => import(/* webpackChunkName: "about" */ './views/d3Tree.vue')
-    },
-    {
-      path: '/d3',
-      name: 'd3',
-      component: () => import(/* webpackChunkName: "about" */ './views/d3MeTree.vue')
-    },
-    {
-      path: '/guquan',
-      name: 'guquan',
-      component: () => import(/* webpackChunkName: "about" */ './views/guquan.vue')
-    },
-    {
-      path: '/tianyancha',
-      name: 'tianyancha',
-      component: () => import(/* webpackChunkName: "about" */ './views/tianyancha.vue')
-    },
-    {
-      path: '/gongsi',
-      name: 'gongsi',
-      component: () => import(/* webpackChunkName: "about" */ './views/gongsi/penetrateChart.vue')
+      name: 'index',
+      component: () => import('./views/penetrateChart.vue')
     }
   ]
 })

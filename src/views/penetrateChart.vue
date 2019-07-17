@@ -8,7 +8,6 @@
 </template>
 <!--股权穿透图-->
 <script>
-  import watermark from '../../common/watermark'
   // 过渡时间
   const DURATION = 0
   // 加减符号半径
