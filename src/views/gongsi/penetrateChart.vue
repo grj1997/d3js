@@ -8,6 +8,7 @@
 </template>
 <!--股权穿透图-->
 <script>
+  import watermark from '../../common/watermark'
   // 过渡时间
   const DURATION = 0
   // 加减符号半径
@@ -43,33 +44,24 @@
     },
 
     methods: {
-      getEquityPenetratePicture () {
-        this.$http.post('/api/getEquityPenetratePicture', {}).then(req => {
-          if (req.status === 200) {
-            this.tree = req.data
-            this.init()
-          }
-        })
-      },
-
       init () {
         let d3 = this.d3
         let svgW = document.body.clientWidth
-        let svgH = 500
+        let svgH = 300
         // 方块形状
         this.diamonds = {
           x: svgW / 2,
           y: 0,
           w: 145,
           h: 68,
-          intervalW: 50,
+          intervalW: 200,
           intervalH: 150
         }
         // 源头对象
         this.originDiamonds = {
           w: 190
         }
-        this.layoutTree = d3.tree().nodeSize([145 + this.diamonds.intervalW, this.diamonds.intervalH]).separation(() => 1);
+        this.layoutTree = d3.tree().nodeSize([this.diamonds.intervalW, this.diamonds.intervalH]).separation(() => 1);
         // 主图
         this.svg = d3.select('#app').append('svg').attr('width', svgW).attr('height', svgH).attr('id', 'treesvg')
           .call(d3.zoom().scaleExtent([0, 5]).on('zoom', () => {
@@ -78,8 +70,6 @@
           }))
           .attr('style', 'position: relative;z-index: 2;')
           .append('g').attr('id', 'g').attr('transform', 'translate(' + (svgW / 2) + ',' + (svgH / 2) + ')');
-        this.tree.x0 = 0
-        this.tree.y0 = 0
         let upTree = null
         let downTree = null
         // 拷贝树的数据
@@ -94,7 +84,7 @@
             downTree.parents = null
           }
         })
-        // hierarchy 返回新的结构
+        // hierarchy 返回新的结构 x0,y0初始化起点坐标
         this.rootUp = d3.hierarchy(upTree, d => d.children);
         this.rootUp.x0 = 0
         this.rootUp.y0 = 0
@@ -149,15 +139,12 @@
           .attr('transform', d => {
             return showtype === 'up' ? 'translate(' + d.x + ',' + -(d.y) + ')' : 'translate(' + d.x + ',' + d.y + ')'
           })
+
         // 创建矩形
         nodeEnter.append('rect')
           .attr('type', d => d.id)
-          .attr('width', d => {
-            return d.depth ? this.diamonds.w : this.originDiamonds.w
-          })
-          .attr('height', d => {
-            return d.depth ? (d.type === COMPANY ? this.diamonds.h : this.diamonds.h - 10) : 30
-          })
+          .attr('width', d => d.depth ? this.diamonds.w : this.originDiamonds.w)
+          .attr('height', d => d.depth ? (d.type === COMPANY ? this.diamonds.h : this.diamonds.h - 10) : 30)
           .attr('x', d => d.depth ? -this.diamonds.w / 2 : -this.originDiamonds.w / 2)
           .attr('y', d => d.depth ? showtype === 'up' ? -this.diamonds.h / 2 : 0 : -15)
           .attr('stroke', d => d.data.type === COMPANY || !d.depth ? '#FD7D00' : '#7A9EFF')
@@ -171,12 +158,11 @@
               return d._children ? '#fff' : (d.depth ? '#fff' : '#7A9EFF')
             }
           });
+
         // 创建圆 加减
         nodeEnter.append('circle')
           .attr('type', d => d.id || (d.id = showtype + 'text' + ++this.i))
-          .attr('r', (d) => {
-            return d.depth ? (this.hasChildNodeArr.indexOf(d) === -1 ? 0 : SYMBOLA_S_R) : 0
-          })
+          .attr('r', (d) => d.depth ? (this.hasChildNodeArr.indexOf(d) === -1 ? 0 : SYMBOLA_S_R) : 0)
           .attr('cy', d => d.depth ? showtype === 'up' ? -(SYMBOLA_S_R + this.diamonds.h / 2) : this.diamonds.h : 0)
           .attr('cx', 0)
           .attr('fill', d => d.children ? '#fff' : '#FD7D00')
@@ -199,24 +185,19 @@
                 document.querySelector(`text[type="${d.id}"]`).innerHTML = '-'
               }
             }, DURATION)
-          })
+          });
 
         // 持股比例
         nodeEnter.append('g')
           .attr('transform', () => 'translate(0,0)')
           .append('text')
-          .attr('class', d => {
-            if (!d.depth) {
-              return 'proportion-hide'
-            } else {
-              return 'proportion'
-            }
-          })
+          .attr('class', d => !d.depth ? 'proportion-hide' : 'proportion')
           .attr('x', d => d.x > 0 ? (showtype === 'up' ? -30 : 30) : 30)
           .attr('y', showtype === 'up' ? this.diamonds.h : -20)
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.data.type === COMPANY ? '#FD7D00' : '#7A9EFF')
-          .text(d => 123);
+          .text(d => '30%');
+
         // 公司名称
         // y轴 否表源头的字体距离
         nodeEnter.append('text')
@@ -355,6 +336,7 @@
             let o = {x: source.x0, y: source.y0};
             return _this.diagonal(o, o, showtype)
           });
+
         let linkUpdate = linkEnter.merge(link);
         // 过渡更新位置.
         linkUpdate.transition()
@@ -464,23 +446,7 @@
         #g{
             .linkup, .linkdown {
                 fill: none;
-                /*stroke: #FD7D00;*/
                 stroke-width: 1px;
-            }
-            #g_rects{
-                rect{
-                    fill:white;
-                    stroke:rgba(255,241,215,1);
-                    stroke-width:2px;
-                    background:rgba(255,241,215,1);
-                    border-radius:4px;
-                    border:1px solid rgba(253,125,0,1);
-                }
-            }
-            #g_text {
-                text{
-                    width: 145px;
-                }
             }
             .text-style-name{
                 font-size:12px; /*no*/
