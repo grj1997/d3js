@@ -50,8 +50,6 @@
         let svgH = 300
         // 方块形状
         this.diamonds = {
-          x: svgW / 2,
-          y: 0,
           w: 145,
           h: 68,
           intervalW: 200,
