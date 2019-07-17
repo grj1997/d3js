@@ -8,7 +8,6 @@
 </template>
 <!--股权穿透图-->
 <script>
-  // import watermark from '../../common/watermark'
   // 过渡时间
   const DURATION = 0
   // 加减符号半径
@@ -25,7 +24,6 @@
     data () {
       return {
         layoutTree: '',
-        layoutTreeMap: '',
         diamonds: '',
         d3: this.$d3,
         i: 0,
@@ -42,19 +40,6 @@
 
     mounted () {
       this.init()
-      // this.getEquityPenetratePicture()
-      // watermark.init({
-      //   watermarkAlpha: 1,
-      //   zIndex: 1,
-      //   watermarkCols: 3,
-      //   watermarkRows: 2,
-      //   watermarkXSpace: 80,
-      //   watermarkYSpace: 100,
-      //   watermarkWidth: 115,
-      //   watermarkHeight: 75,
-      //   watermarkParentNode: document.getElementById('treesvg'),
-      //   watermarkTxt: `<div style="width: 230px;height: 150px;background: url('${require('@/assets/images/watermark.png')}'); background-size: 100%; 100%"></div>`
-      // });
     },
 
     methods: {
@@ -70,24 +55,21 @@
       init () {
         let d3 = this.d3
         let svgW = document.body.clientWidth
-        let svgH = document.getElementById('app').clientHeight
+        let svgH = 500
         // 方块形状
         this.diamonds = {
           x: svgW / 2,
           y: 0,
           w: 145,
           h: 68,
-          intervalW: 150,
+          intervalW: 50,
           intervalH: 150
         }
         // 源头对象
         this.originDiamonds = {
           w: 190
         }
-        this.layoutTree = d3.tree().nodeSize([this.diamonds.intervalW, svgH]);
-        this.layoutTreeMap = d3.treemap().size([svgW, svgH])
-          .round(true)
-          .paddingInner(60);
+        this.layoutTree = d3.tree().nodeSize([145 + this.diamonds.intervalW, this.diamonds.intervalH]).separation(() => 1);
         // 主图
         this.svg = d3.select('#app').append('svg').attr('width', svgW).attr('height', svgH).attr('id', 'treesvg')
           .call(d3.zoom().scaleExtent([0, 5]).on('zoom', () => {
@@ -113,11 +95,9 @@
           }
         })
         // hierarchy 返回新的结构
-        this.rootUp = d3.hierarchy(upTree, d => {
-          return d.children
-        });
-        this.rootUp.x = 0
-        this.rootUp.y = 0
+        this.rootUp = d3.hierarchy(upTree, d => d.children);
+        this.rootUp.x0 = 0
+        this.rootUp.y0 = 0
 
         this.rootDown = d3.hierarchy(downTree, d => d.children);
         this.rootDown.x0 = 0
@@ -146,42 +126,17 @@
        *  @param  {[Object]} sourceTree 初始源对象
        */
       update (source, showtype, sourceTree) {
-        // console.log(source)
         let _this = this
         if (source.parents === null) {
           source.isOpen = !source.isOpen
         }
-        // let treeData
         let nodes
-        let nodes1
-        let links
         if (showtype === 'up') {
-          // treeData = this.layoutTree(this.rootUp)
-          nodes = this.layoutTree(this.rootUp)
-            .descendants();
-          debugger
-          // nodes1 = this.layoutTreeMap(this.rootUp
-          //   .sum(function(d) { return d.value; })
-          //   .sort(function(a, b) { return b.height - a.height || b.value - a.value; }))
-          //   .descendants();
-          links = nodes.slice(1)
+          nodes = this.layoutTree(this.rootUp).descendants()
         } else {
-          nodes = this.layoutTree(this.rootDown)
-            .descendants();
-          // nodes1 = this.layoutTreeMap(this.rootDown
-          //   .sum(function(d) { return d.value; })
-          //   .sort(function(a, b) { return b.height - a.height || b.value - a.value; }))
-          //   .descendants();
-          links = nodes.slice(1)
-          // treeData = this.layoutTree(this.rootDown)
+          nodes = this.layoutTree(this.rootDown).descendants()
         }
-        // let nodes = treeData.descendants()
-        // let links = treeData.descendants().slice(1);
-        // console.log(nodes)
-        // console.log(links)
-        let i = 0
-        console.log(nodes)
-        // console.log(nodes1)
+        let links = nodes.slice(1);
         nodes.forEach(d => {
           d.y = d.depth * this.diamonds.intervalH;
         });
@@ -248,7 +203,7 @@
 
         // 持股比例
         nodeEnter.append('g')
-          .attr('transform', d => 'translate(0,0)')
+          .attr('transform', () => 'translate(0,0)')
           .append('text')
           .attr('class', d => {
             if (!d.depth) {
@@ -327,7 +282,7 @@
           .attr('markerWidth', 12)
           .attr('markerHeight', 12)
           .attr('orient', '90')
-          .attr('refX', () => showtype === 'up' ? '-20' : '20')
+          .attr('refX', () => showtype === 'up' ? '-5' : '15')
           .attr('stroke-width', 2)
           .attr('fill', 'red')
           .append('path')
