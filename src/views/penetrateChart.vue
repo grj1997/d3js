@@ -133,9 +133,7 @@
 
         let nodeEnter = node.enter().append('g')
           .attr('class', d => showtype === 'up' && !d.depth ? 'hide-node' : 'node' + showtype)
-          .attr('transform', d => {
-            return showtype === 'up' ? 'translate(' + d.x + ',' + -(d.y) + ')' : 'translate(' + d.x + ',' + d.y + ')'
-          })
+          .attr('transform', d => showtype === 'up' ? 'translate(' + d.x + ',' + -(d.y) + ')' : 'translate(' + d.x + ',' + d.y + ')')
 
         // 创建矩形
         nodeEnter.append('rect')
@@ -302,9 +300,7 @@
         // 将退出节点转换到父节点的新位置.
         let nodeExit = node.exit().transition()
           .duration(DURATION)
-          .attr('transform', () => {
-            return showtype === 'up' ? 'translate(' + source.x + ',' + -(source.y) + ')' : 'translate(' + source.x + ',' + (parseInt(source.y)) + ')'
-          })
+          .attr('transform', () => showtype === 'up' ? 'translate(' + source.x + ',' + -(source.y) + ')' : 'translate(' + source.x + ',' + (parseInt(source.y)) + ')')
           .remove();
 
         nodeExit.select('rect')
@@ -321,13 +317,7 @@
         let linkEnter = link.enter().insert('path', 'g')
           .attr('class', 'link' + showtype)
           .attr('marker-start', d => `url(#${showtype}resolved${d.data.type})`)// 根据箭头标记的id号标记箭头
-          .attr('stroke', d => {
-            if (d.data.type === COMPANY) {
-              return '#FD7D00'
-            } else {
-              return '#7A9EFF'
-            }
-          })
+          .attr('stroke', d => d.data.type === COMPANY ? '#FD7D00' : '#7A9EFF')
           .style('fill-opacity', 1)
           .attr('d', () => {
             let o = {x: source.x0, y: source.y0};
