@@ -4,18 +4,22 @@
             <button class="save" @click="saveImg">保存</button>
             <button class="reset" @click="resetSvg">重置</button>
         </div>
+        <div id="penetrateChart">
+        </div>
     </div>
 </template>
-<!--股权穿透图-->
+<!--关联图谱图-->
 <script>
+  import watermark from '../tool/watermark'
+  import html2canvas from 'html2canvas'
   // 过渡时间
   const DURATION = 0
   // 加减符号半径
   const SYMBOLA_S_R = 9
   // 公司
-  const COMPANY = 0
+  const COMPANY = '0'
   // 人
-  const PERSON = 1
+  const PERSON = '1'
   export default {
     props: {},
 
@@ -31,22 +35,44 @@
         originDiamonds: '',
         diagonalUp: '',
         diagonalDown: '',
-        tree: {"name":"多多包","children":[{"name":"一卡通公司","type":0},{"name":"一卡通公司2","type":0,"children":[{"name":"小公司","type":0,"children":[{"name":"小小小","type":0,"children":[{"type":1,"name":"笑小下"}]}]},{"type":0,"name":"小公司2"}]},{"name":"一卡通公司2333","type":0,"children":[{"type":0,"name":"小公司"},{"type":0,"name":"小公司2"}]},{"type":0,"name":"一卡通公司2222"}],"parents":[{"name":"大公司","type":0,"children":[{"name":"发发委","type":0,"money":"780万元","children":[{"type":0,"money":"780万元","name":"123"}]},{"name":"123发发委","money":"780万元","type":0,"children":[{"money":"780万元","type":0,"name":"123"}]}]},{"name":"多多网","money":"780万元","type":0,"children":[{"type":0,"money":"780万元","name":"发哈哈"}]},{"name":"龙龙投资","money":"780万元","type":0,"children":[{"type":1,"money":"780万元","name":"王林"},{"type":1,"money":"780万元","name":"张峰"},{"type":1,"money":"780万元","name":"侯明"}]}]},
+        tree: {"children":[{"controlPerson":false,"children":[],"old":false,"name":"多西西黔西南分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西六盘水分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西贵阳分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西安顺分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西毕节分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西遵义分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西黔东南分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西铜仁分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西黔南分公司","type":"0"}],"name":"多西西","parents":[{"controlPerson":true,"money":"3000","children":[],"parentMoney":3000,"old":true,"name":"发展公司","scale":1,"type":"0","oldUrlName":""}]},
         rootUp: '',
         rootDown: '',
-        svg: ''
+        svg: '',
+        svgW: document.getElementById('app').clientWidth,
+        svgH: document.getElementById('app').clientHeight
       }
+    },
+
+    beforeCreate () {
+      document.body.style.overflow = 'hidden'
+    },
+
+    beforeDestroy () {
+      document.body.style.overflow = 'auto'
     },
 
     mounted () {
       this.init()
+      watermark.init({
+        watermarkAlpha: 1,
+        zIndex: 1,
+        watermarkCols: 4,
+        watermarkRows: 2,
+        watermarkXSpace: 80,
+        watermarkYSpace: 100,
+        watermarkWidth: 115,
+        watermarkHeight: 75,
+        watermarkParentNode: document.getElementById('penetrateChart'),
+        watermarkTxt: `<div style="width: 230px;height: 150px;background: url('${require('@/assets/logo.png')}'); background-size: 100%; 100%"></div>`
+      });
     },
 
     methods: {
       init () {
         let d3 = this.d3
-        let svgW = document.body.clientWidth
-        let svgH = 500
+        let svgW = this.svgW
+        let svgH = this.svgH
         // 方块形状
         this.diamonds = {
           w: 145,
@@ -60,7 +86,7 @@
         }
         this.layoutTree = d3.tree().nodeSize([this.diamonds.intervalW, this.diamonds.intervalH]).separation(() => 1);
         // 主图
-        this.svg = d3.select('#app').append('svg').attr('width', svgW).attr('height', svgH).attr('id', 'treesvg')
+        this.svg = d3.select('#penetrateChart').append('svg').attr('width', svgW).attr('height', svgH).attr('id', 'treesvg')
           .call(d3.zoom().scaleExtent([0, 5]).on('zoom', () => {
             // 设置缩放位置以及平移初始位置
             this.svg.attr('transform', d3.event.transform.translate(svgW / 2, svgH / 2));
@@ -101,8 +127,10 @@
           }
         ]
         treeArr.map(item => {
-          item.data.children.forEach(this.collapse);
-          this.update(item.data, item.type, item.data)
+          if (item.data.children) {
+            item.data.children.forEach(this.collapse);
+            this.update(item.data, item.type, item.data)
+          }
         })
       },
 
@@ -134,7 +162,7 @@
         let nodeEnter = node.enter().append('g')
           .attr('class', d => showtype === 'up' && !d.depth ? 'hide-node' : 'node' + showtype)
           .attr('transform', d => showtype === 'up' ? 'translate(' + d.x + ',' + -(d.y) + ')' : 'translate(' + d.x + ',' + d.y + ')')
-
+          .attr('opacity', d => showtype === 'up' && !d.depth ? (this.rootDown.data.children.length ? 0 : 1) : 1); // 拥有下部分则隐藏初始块
         // 创建矩形
         nodeEnter.append('rect')
           .attr('type', d => d.id)
@@ -186,43 +214,90 @@
         nodeEnter.append('g')
           .attr('transform', () => 'translate(0,0)')
           .append('text')
-          .attr('class', d => !d.depth ? 'proportion-hide' : 'proportion')
           .attr('x', d => d.x > 0 ? (showtype === 'up' ? -30 : 30) : 30)
           .attr('y', showtype === 'up' ? this.diamonds.h : -20)
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.data.type === COMPANY ? '#FD7D00' : '#7A9EFF')
-          .text(d => '30%');
+          .attr('opacity', d => !d.depth ? 0 : 1)
+          .text(() => showtype === 'up' ? '30%' : '')
+          .style('font-size', '10px')
+          .style('font-family', 'PingFangSC-Regular')
+          .style('font-weight', '400');
 
         // 公司名称
         // y轴 否表源头的字体距离
         nodeEnter.append('text')
-          .attr('class', 'text-style-name')
           .attr('x', 0)
-          .attr('y', showtype === 'up' ? -this.diamonds.h / 2 : 0)
+          .attr('y', d => {
+            // 如果是上半部分
+            if (showtype === 'up') {
+              // 如果是1层以上
+              if (d.depth) {
+                return -this.diamonds.h / 2
+              } else {
+                // 如果名字长度大于9个
+                if (d.data.name.length > 9) {
+                  return -5
+                }
+                return 0
+              }
+            } else {
+              if (d.depth) {
+                return 0
+              } else {
+                if (d.data.name.length > 9) {
+                  return -5
+                }
+                return 0
+              }
+            }
+          })
           .attr('dy', d => d.depth ? (d.data.name.length > 9 ? '1.5em' : '2em') : '.3em')
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.depth ? '#465166' : '#fff')
-          .text(d => (d.data.name.length > 9) ? d.data.name.substr(0, 9) : d.data.name);
+          .text(d => (d.data.name.length > 9) ? d.data.name.substr(0, 9) : d.data.name)
+          .style('font-size', '12px')
+          .style('font-family', 'PingFangSC-Medium')
+          .style('font-weight', '500');
 
         // 名称过长 第二段
         nodeEnter.append('text')
-          .attr('class', 'text-style-name')
           .attr('x', 0)
-          .attr('y', showtype === 'up' ? -this.diamonds.h / 2 : 0)
+          .attr('y', d => {
+            // ? (d.depth ? -this.diamonds.h / 2 : 0) : 0
+            if (showtype === 'up') {
+              if (d.depth) {
+                return -this.diamonds.h / 2
+              }
+              return 8
+            } else {
+              if (!d.depth) {
+                return 8
+              }
+              return 0
+            }
+          })
           .attr('dy', d => d.depth ? '3em' : '.3em')
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.depth ? '#465166' : '#fff')
-          .text(d => d.data.name.substr(9, d.data.name.length));
+          .text(d => d.data.name.substr(9, d.data.name.length))
+          .style('font-size', '12px')
+          .style('font-family', 'PingFangSC-Medium')
+          .style('font-weight', '500');
 
         // 认缴金额
         nodeEnter.append('text')
-          .attr('class', 'text-style-money')
           .attr('x', 0)
           .attr('y', showtype === 'up' ? -this.diamonds.h / 2 : 0)
           .attr('dy', d => d.data.name.substr(9, d.data.name.length).length ? '5em' : '4em')
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.depth ? '#465166' : '#fff')
-          .text(d => d.data.money);
+          .text(d => d.data.money ? `认缴金额：${d.data.money}万元` : '')
+          .style('font-size', '10px')
+          .style('font-family', 'PingFangSC-Regular')
+          .style('font-weight', '400')
+          .style('color', 'rgba(70,81,102,1)');
+
         /*
         * 绘制箭头
         * @param  {string} markerUnits [设置为strokeWidth箭头会随着线的粗细发生变化]
@@ -319,6 +394,8 @@
           .attr('marker-start', d => `url(#${showtype}resolved${d.data.type})`)// 根据箭头标记的id号标记箭头
           .attr('stroke', d => d.data.type === COMPANY ? '#FD7D00' : '#7A9EFF')
           .style('fill-opacity', 1)
+          .attr('fill', 'none')
+          .attr('stroke-width', '1px')
           .attr('d', () => {
             let o = {x: source.x0, y: source.y0};
             return _this.diagonal(o, o, showtype)
@@ -342,7 +419,10 @@
           }).remove();
 
         // 隐藏旧位置方面过渡.
-        nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y });
+        nodes.forEach(d => {
+          d.x0 = d.x;
+          d.y0 = d.y
+        });
       },
 
       // 拷贝到_children 隐藏1排以后的树
@@ -386,7 +466,16 @@
       },
 
       saveImg () {
-        alert('保存')
+        html2canvas(document.getElementById('penetrateChart')).then((canvas) => {
+          const context = canvas.getContext('2d');
+          context.mozImageSmoothingEnabled = false;
+          context.webkitImageSmoothingEnabled = false;
+          context.msImageSmoothingEnabled = false;
+          context.imageSmoothingEnabled = false;
+          let base64File = canvas.toDataURL('image/jpg', 1.0);
+          base64File = base64File.replace(/^.*?,/, '')
+          console.log(base64File)
+        });
       },
 
       resetSvg () {
@@ -406,8 +495,8 @@
             right: 15px;
             bottom: 15px;
             button{
-                width:88px;
-                height:32px;
+                width:88px; /*no*/
+                height:32px; /*no*/
                 display: block;
                 border-radius:18px;
                 font-size:14px;
@@ -426,34 +515,12 @@
                 border:1px solid rgba(255,168,9,1);
             }
         }
+        .penetrateChart{
+            width: 100%;
+        }
     }
     #treesvg{
         display: block;
         margin: auto;
-        #g{
-            .linkup, .linkdown {
-                fill: none;
-                stroke-width: 1px;
-            }
-            .text-style-name{
-                font-size:12px; /*no*/
-                font-family:PingFangSC-Medium;
-                font-weight:500;
-            }
-            .text-style-money{
-                font-size:10px; /*no*/
-                font-family:PingFangSC-Regular;
-                font-weight:400;
-                color:rgba(70,81,102,1)
-            }
-            .proportion{
-                font-size:10px;
-                font-family:PingFangSC-Regular;
-                font-weight:400;
-            }
-        }
-        .proportion-hide, .hide-node{
-            display: none;
-        }
     }
 </style>

@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
-    "d3": "4.7.1",
+    "d3": "4.13.0",
+    "html2canvas": "^1.0.0-rc.3",
     "jquery": "^3.4.1",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3"

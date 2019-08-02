@@ -10,6 +10,11 @@ export default new Router({
       path: '/',
       name: 'index',
       component: () => import('./views/penetrateChart.vue')
+    },
+    {
+      path: '/citySelect',
+      name: 'citySelect',
+      component: () => import('./views/citySelect.vue')
     }
   ]
 })
