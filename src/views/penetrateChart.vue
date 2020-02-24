@@ -489,10 +489,10 @@
         right: 15px;
         bottom: 15px;
         button{
-          width:88px; /*no*/
-          height:32px; /*no*/
+          border: 0;
+          width:188px;
+          height:132px;
           display: block;
-          border-radius:18px;
           font-size:14px;
           font-family:PingFangSC-Medium;
           font-weight:500;
