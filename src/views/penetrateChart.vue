@@ -1,16 +1,15 @@
 <template>
     <div class="penetrate-chart">
-        <div class="bt-group">
-            <button class="save" @click="saveImg">保存</button>
-            <button class="reset" @click="resetSvg">重置</button>
-        </div>
-        <div id="penetrateChart">
-        </div>
+      <div class="bt-group">
+        <button class="save" @click="saveImg">保存</button>
+        <button class="reset" @click="resetSvg">重置</button>
+      </div>
+      <div id="penetrateChart">
+      </div>
     </div>
 </template>
 <!--关联图谱图-->
 <script>
-  import watermark from '../tool/watermark'
   import html2canvas from 'html2canvas'
   // 过渡时间
   const DURATION = 0
@@ -35,12 +34,12 @@
         originDiamonds: '',
         diagonalUp: '',
         diagonalDown: '',
-        tree: {"children":[{"controlPerson":false,"children":[],"old":false,"name":"多西西黔西南分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西六盘水分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西贵阳分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西安顺分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西毕节分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西遵义分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西黔东南分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西铜仁分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西黔南分公司","type":"0"}],"name":"多西西","parents":[{"controlPerson":true,"money":"3000","children":[],"parentMoney":3000,"old":true,"name":"发展公司","scale":1,"type":"0","oldUrlName":""}]},
+        tree: {"children":[{"controlPerson":false,"children":[],"old":false,"name":"多西西黔西南分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西六盘水分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西贵阳分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西安顺分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西毕节分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西遵义分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西黔东南分公司","type":"0"},{"controlPerson":false,"children":[],"old":false,"name":"多西西铜仁分公司","type":"0"},{"controlPerson":false,"children":[{"controlPerson":false,"children":[],"old":false,"name":"多西西黔南分公司下属公司","type":"0"}],"old":false,"name":"多西西黔南分公司","type":"0"}],"name":"多西西","parents":[{"controlPerson":true,"money":"3000","children":[{"controlPerson":true,"money":"3000","children":[],"parentMoney":3000,"old":true,"name":"发展公司父级公司","scale":1,"type":"0","oldUrlName":""}],"parentMoney":3000,"old":true,"name":"发展公司","scale":1,"type":"0","oldUrlName":""}]},
         rootUp: '',
         rootDown: '',
         svg: '',
-        svgW: document.getElementById('app').clientWidth,
-        svgH: document.getElementById('app').clientHeight
+        svgW: document.body.clientHeight,
+        svgH: document.body.clientWidth
       }
     },
 
@@ -54,23 +53,12 @@
 
     mounted () {
       this.init()
-      watermark.init({
-        watermarkAlpha: 1,
-        zIndex: 1,
-        watermarkCols: 4,
-        watermarkRows: 2,
-        watermarkXSpace: 80,
-        watermarkYSpace: 100,
-        watermarkWidth: 115,
-        watermarkHeight: 75,
-        watermarkParentNode: document.getElementById('penetrateChart'),
-        watermarkTxt: `<div style="width: 230px;height: 150px;background: url('${require('@/assets/logo.png')}'); background-size: 100%; 100%"></div>`
-      });
     },
 
     methods: {
       init () {
         let d3 = this.d3
+        // 强制横屏 所以取反
         let svgW = this.svgW
         let svgH = this.svgH
         // 方块形状
@@ -219,7 +207,7 @@
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.data.type === COMPANY ? '#FD7D00' : '#7A9EFF')
           .attr('opacity', d => !d.depth ? 0 : 1)
-          .text(() => showtype === 'up' ? '30%' : '')
+          .text(d => showtype === 'up' ? d.data.scale === 0 ? '非公示' : d.data.scale + '%' : '')
           .style('font-size', '10px')
           .style('font-family', 'PingFangSC-Regular')
           .style('font-weight', '400');
@@ -264,7 +252,7 @@
         nodeEnter.append('text')
           .attr('x', 0)
           .attr('y', d => {
-            // ? (d.depth ? -this.diamonds.h / 2 : 0) : 0
+             // ? (d.depth ? -this.diamonds.h / 2 : 0) : 0
             if (showtype === 'up') {
               if (d.depth) {
                 return -this.diamonds.h / 2
@@ -280,7 +268,13 @@
           .attr('dy', d => d.depth ? '3em' : '.3em')
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.depth ? '#465166' : '#fff')
-          .text(d => d.data.name.substr(9, d.data.name.length))
+          .text(d => {
+            // 索引从第19个开始截取有表示超出
+            if (d.data.name.substr(19, 1)) {
+              return d.data.name.substr(9, 10) + '...'
+            }
+            return d.data.name.substr(9, 10)
+          })
           .style('font-size', '12px')
           .style('font-family', 'PingFangSC-Medium')
           .style('font-weight', '500');
@@ -292,7 +286,7 @@
           .attr('dy', d => d.data.name.substr(9, d.data.name.length).length ? '5em' : '4em')
           .attr('text-anchor', 'middle')
           .attr('fill', d => d.depth ? '#465166' : '#fff')
-          .text(d => d.data.money ? `认缴金额：${d.data.money}万元` : '')
+          .text(d => d.data.money ? d.data.money === '（非公示项）' ? '认缴金额：非公示' : `认缴金额：${d.data.money}万元` : '')
           .style('font-size', '10px')
           .style('font-family', 'PingFangSC-Regular')
           .style('font-weight', '400')
@@ -489,38 +483,38 @@
 
 <style lang="scss">
     .penetrate-chart {
-        .bt-group{
-            position: fixed;
-            z-index: 999;
-            right: 15px;
-            bottom: 15px;
-            button{
-                width:88px; /*no*/
-                height:32px; /*no*/
-                display: block;
-                border-radius:18px;
-                font-size:14px;
-                font-family:PingFangSC-Medium;
-                font-weight:500;
-                line-height:20px;
-            }
-            .save{
-                background:rgba(255,168,9,1);
-                color:rgba(255,255,255,1);
-            }
-            .reset{
-                margin-top: 8px;
-                color: rgba(255, 168, 9, 1);
-                background: white;
-                border:1px solid rgba(255,168,9,1);
-            }
+      .bt-group{
+        position: fixed;
+        z-index: 999;
+        right: 15px;
+        bottom: 15px;
+        button{
+          width:88px; /*no*/
+          height:32px; /*no*/
+          display: block;
+          border-radius:18px;
+          font-size:14px;
+          font-family:PingFangSC-Medium;
+          font-weight:500;
+          line-height:20px;
         }
-        .penetrateChart{
-            width: 100%;
+        .save{
+          background:rgba(255,168,9,1);
+          color:rgba(255,255,255,1);
         }
+        .reset{
+          margin-top: 8px;
+          color: rgba(255, 168, 9, 1);
+          background: white;
+          border:1px solid rgba(255,168,9,1);
+        }
+      }
+      .penetrateChart{
+        width: 100%;
+      }
     }
     #treesvg{
-        display: block;
-        margin: auto;
+      display: block;
+      margin: auto;
     }
 </style>
